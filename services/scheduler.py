@@ -19,12 +19,7 @@ class Schedule:
         self.intrum = ClientIntrum(self.api_key)  # 21d1c8300ca07c06bf8f3aac3c16c275
         self.script_path = './change_worker.php'  # Путь к скрипту
 
-    def schedule_check(self):
-        config = Config()
-        """Перенастраивает планировщик на основе текущей конфигурации."""
-        schedule.clear()  # Очистить предыдущее расписание
-        schedule.every().day.at(config.start_time).do(self.run_async_work)
-        logger.info(f"Проверка лидов запланирована на {config.start_time} каждый день.")
+
 
     async def work(self):
         users = await self.intrum.get_users()
@@ -60,15 +55,13 @@ class Schedule:
                 if data[user_id]:
                     send = True
                     send_message += f"{user_id}, "
-                    # self.change_worker(user_id=str(user_id), value="Лиды Включены")
-                    self.change_worker(value=value_field)
+                    self.change_worker(user_id=str(user_id), value=value_field)
                     logger.info(f"Пользователь изменен: {user_id}")
             else:
                 if not data[user_id]:
                     send = True
                     send_message += f"{user_id}\n"
-                    # self.change_worker(user_id=str(user_id), value="Лиды Включены")
-                    self.change_worker(value=value_field)
+                    self.change_worker(user_id=str(user_id), value=value_field)
                     logger.info(f"Пользователь изменен: {user_id}")
 
         if send:
@@ -93,16 +86,21 @@ class Schedule:
     def run_async_work(self):
         asyncio.run(self.work())
 
+    def schedule_check(self):
+        config = Config()
+        """Перенастраивает планировщик на основе текущей конфигурации."""
+        schedule.clear()  # Очистить предыдущее расписание
+        schedule.every().day.at(config.start_time).do(self.run_async_work)
+        logger.info(f"Проверка лидов запланирована на {config.start_time} каждый день.")
+
     def run(self):
         last_check_time = None
         while True:
             config = Config()
             schedule.run_pending()
-            time.sleep(60 + 10)
-            # Проверка на обновление конфигурации каждые 10 минут
+            time.sleep(10)
             current_check_time = config.start_time
             if current_check_time != last_check_time:
-                # Перезагрузить расписание, если время запуска изменилось
                 print(f"Обнаружено новое время запуска: {current_check_time}. Обновление расписания...")
                 self.schedule_check()
                 last_check_time = current_check_time
