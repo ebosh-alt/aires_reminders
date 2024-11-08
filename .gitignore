@@ -2,8 +2,8 @@
 *.iml
 out
 gen
-.venv
-/data/.env
+venv
 *.session
 *.db
 диаграмма.drawio
+data/.env

@@ -3,8 +3,6 @@ import logging
 from aiogram import types
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
-from entities.database import accounts
-
 logger = logging.getLogger(__name__)
 
 
