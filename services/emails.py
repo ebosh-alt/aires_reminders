@@ -12,8 +12,8 @@ class MailService:
     def send(self, theme, message):
         config = Config()
         msg = EmailMessage()
-        msg.set_content(theme)
-        msg['Subject'] = message
+        msg.set_content(message)
+        msg['Subject'] = theme
         msg['From'] = self.sender
         msg['To'] = config.emails
 

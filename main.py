@@ -8,7 +8,6 @@ from aiogram.types import BotCommand
 from data.config import bot, dp
 from handlers import routers
 from services import middleware
-from services.Intrum.Client import ClientIntrum
 from services.scheduler import Schedule
 
 logger = logging.getLogger(__name__)
@@ -25,7 +24,6 @@ async def set_commands():
 
 
 async def main() -> None:
-    # logger.info(rm)
     scheduler_process = Process(target=Schedule().run)
     scheduler_process.start()
     await set_commands()

@@ -1,12 +1,12 @@
 import asyncio
 import datetime
 import logging
-import subprocess
 import time
 
+import requests
 import schedule
 
-from data.config import Config, sender, password
+from data.config import Config, sender, password, aires_api_key
 from services.Intrum.Client import ClientIntrum
 from services.emails import MailService
 
@@ -15,11 +15,10 @@ logger = logging.getLogger(__name__)
 
 class Schedule:
     def __init__(self):
-        self.api_key = "21d1c8300ca07c06bf8f3aac3c16c275"
-        self.intrum = ClientIntrum(self.api_key)  # 21d1c8300ca07c06bf8f3aac3c16c275
-        self.script_path = './change_worker.php'  # Путь к скрипту
-
-
+        self.api_key = aires_api_key
+        self.intrum = ClientIntrum(self.api_key)
+        self.script_path = '../php_app/change_worker.php'
+        self.url = "http://php_app:80"
 
     async def work(self):
         users = await self.intrum.get_users()
@@ -31,52 +30,66 @@ class Schedule:
         await self.check_user(deals, "Лиды Отключены")
         await self.check_user(expired_deals, "Лиды Включены")
 
-    async def check_user(self, deals, value_field):
+    async def send_mes(self):
         ms = MailService(sender=sender, password=password)
-        config = Config()
-        delay = datetime.timedelta(hours=config.delay)
-        now = datetime.datetime.now()
-        data = {
-        }
-        send_message = "Id пользователей: "
-        send = False
-        for deal in deals:
-            if deal:
-                reminder = await self.intrum.get_reminder(deal.fields["3770"].value)
-                if deal.employee_id == "2":
-                    logger.info(reminder)
-                if reminder:
-                    if now - delay > reminder.dtend:
-                        data[deal.employee_id] = True
-                    else:
-                        data[deal.employee_id] = False
-        for user_id in data:
-            if value_field == "Лиды Отключены":
-                if data[user_id]:
-                    send = True
-                    send_message += f"{user_id}, "
-                    self.change_worker(user_id=str(user_id), value=value_field)
-                    logger.info(f"Пользователь изменен: {user_id}")
-            else:
-                if not data[user_id]:
-                    send = True
-                    send_message += f"{user_id}\n"
-                    self.change_worker(user_id=str(user_id), value=value_field)
-                    logger.info(f"Пользователь изменен: {user_id}")
+        ms.send("Пропущено уведомление", "send_message[0:-2]")
 
-        if send:
-            logger.info(send_message)
-            if value_field == "Лиды Включены":
-                ms.send("Восстановили сделки", send_message[0:-2])
-            else:
-                ms.send("Пропущено уведомление", send_message[0:-2])
+    async def check_user(self, deals, value_field):
+        try:
+            ms = MailService(sender=sender, password=password)
+            config = Config()
+            delay = datetime.timedelta(hours=config.delay)
+            now = datetime.datetime.now()
+            data = {
+            }
+            send_message = "Id пользователей: "
+            send = False
+            for deal in deals:
+                if deal:
+                    reminder = await self.intrum.get_reminder(deal.fields["3770"].value)
+                    if deal.employee_id == "2":
+                        logger.info(reminder)
+                    if reminder:
+                        if now - delay > reminder.dtend:
+                            data[deal.employee_id] = True
+                        else:
+                            data[deal.employee_id] = False
+            for user_id in data:
+                if value_field == "Лиды Отключены":
+                    if data[user_id]:
+                        send = True
+                        send_message += f"{user_id}, "
+                        self.change_worker(user_id=str(user_id), value=value_field)
+                        logger.info(f"Пользователь изменен(Лиды Отключены): {user_id}")
+                else:
+                    if not data[user_id]:
+                        send = True
+                        send_message += f"{user_id}\n"
+                        self.change_worker(user_id=str(user_id), value=value_field)
+                        logger.info(f"Пользователь изменен(Лиды Включены): {user_id}")
+
+            if send:
+                try:
+                    if value_field == "Лиды Включены":
+                        ms.send("Восстановили сделки", send_message[0:-2])
+                    else:
+                        ms.send("Пропущено уведомление", send_message[0:-2])
+                    logger.info(f"Email успешно отправлена: {send_message}")
+                except Exception as e:
+                    logger.info(f"Не получилось отправить Email: {e}")
+        except Exception as e:
+            logger.info(f"Ошибка при обращении к серверу: {e}")
 
     def change_worker(self, user_id: str = "1125", value: str = "Лиды Отключены"):
         try:
-            result = subprocess.run(['php', self.script_path, self.api_key, user_id, value], stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE, text=True)
-            if result.returncode != 0:
-                return True
+            response = requests.post(self.url, json={"api_key": self.api_key, "user_id": user_id, "value_field": value})
+            logger.info(response)
+            if response.status_code == 200:
+                data = response.json()
+                if data["status"] == "success":
+                    return True
+                else:
+                    return False
             else:
                 return False
         except Exception as e:
@@ -91,7 +104,6 @@ class Schedule:
         """Перенастраивает планировщик на основе текущей конфигурации."""
         schedule.clear()  # Очистить предыдущее расписание
         schedule.every().day.at(config.start_time).do(self.run_async_work)
-        logger.info(f"Проверка лидов запланирована на {config.start_time} каждый день.")
 
     def run(self):
         last_check_time = None
@@ -101,6 +113,6 @@ class Schedule:
             time.sleep(10)
             current_check_time = config.start_time
             if current_check_time != last_check_time:
-                print(f"Обнаружено новое время запуска: {current_check_time}. Обновление расписания...")
+                logger.info(f"Обнаружено новое время запуска: {current_check_time}. Обновление расписания...")
                 self.schedule_check()
                 last_check_time = current_check_time

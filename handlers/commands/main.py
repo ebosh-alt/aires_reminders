@@ -1,17 +1,18 @@
 import logging
-import re
 
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
 from data.config import config
+from filters.Filters import IsAdmin
+from services.validate import is_valid_time_format, is_valid_email
 
 router = Router()
 logger = logging.getLogger(__name__)
 
 
-@router.message(Command("on"))
+@router.message(Command("on"), IsAdmin())
 async def on(message: Message):
     config.enabled = True
     config.save_config()
@@ -19,7 +20,7 @@ async def on(message: Message):
     await message.answer("Параметр обновлен")
 
 
-@router.message(Command("off"))
+@router.message(Command("off"), IsAdmin())
 async def off(message: Message):
     config.enabled = False
     config.save_config()
@@ -27,22 +28,7 @@ async def off(message: Message):
     await message.answer("Параметр обновлен")
 
 
-def is_valid_time_format(time_str: str) -> bool:
-    """
-    Проверяет, соответствует ли строка формату времени ЧЧ:ММ.
-
-    Args:
-        time_str (str): Строка с временем.
-
-    Returns:
-        bool: True, если строка соответствует формату ЧЧ:ММ, иначе False.
-    """
-    # Регулярное выражение для формата ЧЧ:ММ, где ЧЧ от 00 до 23 и ММ от 00 до 59
-    time_pattern = re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d$")
-    return bool(time_pattern.match(time_str))
-
-
-@router.message(Command("set_start"))
+@router.message(Command("set_start"), IsAdmin())
 async def set_start(message: Message):
     data = message.text.split(" ")
     if len(data) == 1:
@@ -57,7 +43,7 @@ async def set_start(message: Message):
         await message.answer("Неверный формат времени. Пример: /set_start 02:00")
 
 
-@router.message(Command("set_delay"))
+@router.message(Command("set_delay"), IsAdmin())
 async def set_delay(message: Message):
     data = message.text.split(" ")
     if len(data) == 1:
@@ -72,24 +58,7 @@ async def set_delay(message: Message):
         await message.answer("Неверное значение задержки. Пример: /set_delay 5")
 
 
-def is_valid_email(email: str) -> bool:
-    """
-    Проверяет, является ли строка корректным адресом электронной почты.
-
-    Args:
-        email (str): Строка с адресом электронной почты.
-
-    Returns:
-        bool: True, если строка соответствует формату email, иначе False.
-    """
-    # Регулярное выражение для валидации email-адреса
-    email_pattern = re.compile(
-        r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
-    )
-    return bool(email_pattern.match(email))
-
-
-@router.message(Command("set_emails"))
+@router.message(Command("set_emails"), IsAdmin())
 async def set_emails(message: Message):
     data = message.text.split(" ")
     if len(data) == 1:

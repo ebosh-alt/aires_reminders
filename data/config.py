@@ -10,6 +10,8 @@ env = Env()
 env.read_env()
 
 bot_token = env('BOT_TOKEN')
+aires_api_key = env('AIRES_API_KEY')
+ADMINS = [int(admin_id) for admin_id in env('ADMINS').split()]
 dp = Dispatcher()
 bot = Bot(bot_token)
 

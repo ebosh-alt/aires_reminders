@@ -1,10 +1,11 @@
 <?php
 $url = "http://aires.astoria-tula.ru/sharedapi/worker/update";
 
-$apikey = $argv[1];  // Первый параметр
-$user_id = $argv[2];    // Второй параметр
-$value_field = $argv[3];    // Второй параметр
 
+$data = json_decode(file_get_contents('php://input'), true);
+$apikey = $data["api_key"];  // Первый параметр
+$user_id = $data["user_id"];    // Второй параметр
+$value_field = $data["value_field"];    // Второй параметр
 $params = array(
     array(
         'id' => $user_id,
@@ -25,8 +26,8 @@ curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 curl_setopt($ch, CURLOPT_POST, 1);
 curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post));
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-$result = json_decode(curl_exec($ch), true);
+$response = curl_exec($ch);
 curl_close($ch);
-print_r($result);
-return $result;
+$result = json_decode($response, true);
+echo json_encode($result, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 ?>
