@@ -18,7 +18,7 @@ class Schedule:
         self.api_key = aires_api_key
         self.intrum = ClientIntrum(self.api_key)
         self.script_path = '../php_app/change_worker.php'
-        self.url = "http://php_app:80"
+        self.url = "http://php_app:80/change_worker.php"
 
     async def work(self):
         users = await self.intrum.get_users()

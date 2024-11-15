@@ -1,5 +1,5 @@
 services:
-  python: # Сервис для Python
+  python_app: # Сервис для Python
     image: python:3.12  # Указываем имя и тег образа
     build:
       context: .
@@ -8,11 +8,11 @@ services:
       - .:/app  # Подключаем директорию с Python кодом
     command: python /app/main.py  # Команда для запуска Python
     depends_on:
-      - php  # Указываем, что Python зависит от PHP (запустится после PHP)
+      - php_app  # Указываем, что Python зависит от PHP (запустится после PHP)
 
-  php: # Сервис для PHP
+  php_app: # Сервис для PHP
     image: php:8.0-apache  # Базовый образ PHP с Apache
     volumes:
-      - ./php:/var/www/html  # Подключаем директорию с PHP кодом
+      - ./php_app:/var/www/html  # Подключаем директорию с PHP кодом
     ports:
       - "8080:80"  # Пробрасываем порт 8080 (внешний) на 80 (контейнерный)
