@@ -28,7 +28,7 @@ class FieldData(BaseModel):
 
 class User(BaseModel):
     id: str
-    telegram_id: str = None
+    # telegram_id: str = None
     division_id: str = None
     name: str = None
     surname: str = None

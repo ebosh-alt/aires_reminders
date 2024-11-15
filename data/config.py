@@ -18,7 +18,7 @@ bot = Bot(bot_token)
 CONFIG_FILE = "data/config.json"
 
 logger = logging.getLogger(__name__)
-DIVISION_ID = "13"
+DIVISION_ID = "14"
 REQUIRED_FIELDS = {"3644", "3657"}  # Пример: поля с id 3643, 3644 и 3657
 REQUIRED_FIELDS_DEALS = {"3770", "3850", "3851"}
 
@@ -79,5 +79,7 @@ class Config:
 
 
 config = Config()
-sender = "isakovn2005@gmail.com"
-password = "ppca spzv qseg jhen"
+sender = "bvvrus@gmail.com"
+# sender = "isakovn2005@gmail.com"
+password = "zqtl ujdy hzyt tymi"
+# password = "ppca spzv qseg jhen"

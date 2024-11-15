@@ -9,48 +9,48 @@ class ClientIntrum(BaseApi):
     def __init__(self, token):
         super().__init__(token)
 
-    async def get_users(self, overdue: bool = False) -> list[User] | int:
+    async def get_users(self, overdue: bool = False) -> list[User] | int:  #TODO: изменить проверку статусу(В штате)
         response = await self._post(ApiPoint.worker_filter, {"params[publish]": 1})
-
+        logger.info(response)
         if response.get("status") != "success":
             return 404
 
         users = []
         for user_data in response.get("data", {}).values():
-            telegram_id = user_data.get("fields", {}).get("3643", {}).get("value") or 0
-            division_id = user_data.get("division_id")
-            fields = user_data.get("fields", {})
-            works = fields.get("1707", {}).get("value")
-            leads_connected = fields.get("3644", {}).get("value")
-            lead_status = fields.get("3657", {}).get("value")
-            if not overdue:
-                add_condition = all([
-                    works == "Сотрудник в штате",
-                    leads_connected == "1",
-                    lead_status == "Лиды Включены"
-                ])
-            else:
-                add_condition = all([
-                    works == "Сотрудник в штате",
-                    leads_connected == "1",
-                    lead_status == "Лиды Отключены"
-                ])
-            if division_id == DIVISION_ID and telegram_id and add_condition:
-                fields_data = {
-                    field_id: FieldData(**field_info)
-                    for field_id, field_info in fields.items()
-                    if field_id in REQUIRED_FIELDS
-                }
-                users.append(User(
-                    id=user_data.get("id"),
-                    telegram_id=telegram_id,
-                    division_id=division_id,
-                    name=user_data.get("name"),
-                    surname=user_data.get("surname"),
-                    secondname=user_data.get("secondname"),
-                    fields=fields_data
-                ))
-
+            if user_data.get("id") == "952":
+                logger.info(json.dumps(user_data, indent=4, ensure_ascii=False))
+                division_id = user_data.get("division_id")
+                fields = user_data.get("fields", {})
+                works = fields.get("1707", {}).get("value")
+                leads_connected = fields.get("3644", {}).get("value")
+                lead_status = fields.get("3657", {}).get("value")
+                if not overdue:
+                    add_condition = all([
+                        works == "Сотрудник в штате" or works == "Новый сотрудник",
+                        leads_connected == "1",
+                        lead_status == "Лиды Включены"
+                    ])
+                else:
+                    add_condition = all([
+                        works == "Сотрудник в штате",
+                        leads_connected == "1",
+                        lead_status == "Лиды Отключены"
+                    ])
+                if division_id == DIVISION_ID and add_condition:
+                    fields_data = {
+                        field_id: FieldData(**field_info)
+                        for field_id, field_info in fields.items()
+                        if field_id in REQUIRED_FIELDS
+                    }
+                    users.append(User(
+                        id=user_data.get("id"),
+                        # telegram_id=telegram_id,
+                        division_id=division_id,
+                        name=user_data.get("name"),
+                        surname=user_data.get("surname"),
+                        secondname=user_data.get("secondname"),
+                        fields=fields_data
+                    ))
         return users
 
     async def get_users_expired(self):

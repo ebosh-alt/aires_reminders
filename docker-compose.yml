@@ -5,11 +5,11 @@ services:
       context: .
     depends_on:
       - php_app
-    restart: always
+  #    restart: always
   php_app:
     image: php_app:latest  # Указываем имя и тег образа
     build:
       context: ./php_app
     ports:
       - "8080:80"
-    restart: always
+#    restart: always

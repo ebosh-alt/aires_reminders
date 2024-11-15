@@ -22,17 +22,11 @@ class Schedule:
 
     async def work(self):
         users = await self.intrum.get_users()
-        logger.info(users)
         expired_users = await self.intrum.get_users_expired()
         deals = await self.intrum.get_deals(users)
-        logger.info(deals)
         expired_deals = await self.intrum.get_deals(expired_users)
         await self.check_user(deals, "Лиды Отключены")
         await self.check_user(expired_deals, "Лиды Включены")
-
-    async def send_mes(self):
-        ms = MailService(sender=sender, password=password)
-        ms.send("Пропущено уведомление", "send_message[0:-2]")
 
     async def check_user(self, deals, value_field):
         try:
@@ -40,33 +34,34 @@ class Schedule:
             config = Config()
             delay = datetime.timedelta(hours=config.delay)
             now = datetime.datetime.now()
-            data = {
-            }
+            data = {}
             send_message = "Id пользователей: "
             send = False
             for deal in deals:
                 if deal:
                     reminder = await self.intrum.get_reminder(deal.fields["3770"].value)
-                    if deal.employee_id == "2":
-                        logger.info(reminder)
                     if reminder:
                         if now - delay > reminder.dtend:
                             data[deal.employee_id] = True
                         else:
                             data[deal.employee_id] = False
             for user_id in data:
-                if value_field == "Лиды Отключены":
-                    if data[user_id]:
-                        send = True
-                        send_message += f"{user_id}, "
-                        self.change_worker(user_id=str(user_id), value=value_field)
-                        logger.info(f"Пользователь изменен(Лиды Отключены): {user_id}")
-                else:
-                    if not data[user_id]:
-                        send = True
-                        send_message += f"{user_id}\n"
-                        self.change_worker(user_id=str(user_id), value=value_field)
-                        logger.info(f"Пользователь изменен(Лиды Включены): {user_id}")
+                if user_id == "952":
+                    if value_field == "Лиды Отключены":
+                        if data[user_id]:
+                            status = self.change_worker(user_id=str(user_id), value=value_field)
+                            logger.info(status)
+                            if status:
+                                send = True
+                                send_message += f"{user_id}, "
+                                logger.info(f"Пользователь изменен(Лиды Отключены): {user_id}")
+                        else:
+                            if not data[user_id]:
+                                status = self.change_worker(user_id=str(user_id), value=value_field)
+                                if status:
+                                    send = True
+                                    send_message += f"{user_id}\n"
+                                    logger.info(f"Пользователь изменен(Лиды Включены): {user_id}")
 
             if send:
                 try:
@@ -86,6 +81,7 @@ class Schedule:
             logger.info(response)
             if response.status_code == 200:
                 data = response.json()
+                logger.info(data)
                 if data["status"] == "success":
                     return True
                 else:
@@ -109,10 +105,14 @@ class Schedule:
         last_check_time = None
         while True:
             config = Config()
-            schedule.run_pending()
-            time.sleep(10)
-            current_check_time = config.start_time
-            if current_check_time != last_check_time:
-                logger.info(f"Обнаружено новое время запуска: {current_check_time}. Обновление расписания...")
-                self.schedule_check()
-                last_check_time = current_check_time
+            if config.enabled:
+                print("Work")
+                schedule.run_pending()
+                time.sleep(1)
+                # current_check_time = config.start_time
+                # if current_check_time != last_check_time:
+                #     logger.info(f"Обнаружено новое время запуска: {current_check_time}. Обновление расписания...")
+                #     self.schedule_check()
+                #     last_check_time = current_check_time
+            else:
+                print("No work")

@@ -6,6 +6,9 @@ $data = json_decode(file_get_contents('php://input'), true);
 $apikey = $data["api_key"];  // Первый параметр
 $user_id = $data["user_id"];    // Второй параметр
 $value_field = $data["value_field"];    // Второй параметр
+// $apikey = "21d1c8300ca07c06bf8f3aac3c16c275";  // Первый параметр
+// $user_id = "1152";    // Второй параметр
+// $value_field = "Лиды Включены";    // Второй параметр
 $params = array(
     array(
         'id' => $user_id,
