@@ -24,14 +24,13 @@ async def set_commands():
 
 
 async def main() -> None:
-    # Schedule().change_worker(value="Лиды Включены")
     scheduler_process = Process(target=Schedule().run)
     scheduler_process.start()
-    # await set_commands()
-    # for router in routers:
-    #     dp.include_router(router)
-    # dp.update.middleware(middleware.Logging())
-    # await dp.start_polling(bot)
+    await set_commands()
+    for router in routers:
+        dp.include_router(router)
+    dp.update.middleware(middleware.Logging())
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
     logging.basicConfig(

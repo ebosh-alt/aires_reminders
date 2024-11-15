@@ -105,14 +105,12 @@ class Schedule:
         last_check_time = None
         while True:
             config = Config()
+            time.sleep(10 * 60)
             if config.enabled:
-                print("Work")
                 schedule.run_pending()
-                time.sleep(1)
-                # current_check_time = config.start_time
-                # if current_check_time != last_check_time:
-                #     logger.info(f"Обнаружено новое время запуска: {current_check_time}. Обновление расписания...")
-                #     self.schedule_check()
-                #     last_check_time = current_check_time
-            else:
-                print("No work")
+                current_check_time = config.start_time
+                if current_check_time != last_check_time:
+                    logger.info(f"Обнаружено новое время запуска: {current_check_time}. Обновление расписания...")
+                    self.schedule_check()
+                    last_check_time = current_check_time
+
