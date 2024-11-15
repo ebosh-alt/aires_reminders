@@ -7,3 +7,4 @@ venv
 *.db
 диаграмма.drawio
 data/.env
+__pycache__
