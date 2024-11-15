@@ -1,13 +1,15 @@
 import asyncio
+import json
 import logging
 from contextlib import suppress
 from multiprocessing import Process
 
 from aiogram.types import BotCommand
 
-from data.config import bot, dp
+from data.config import bot, dp, Config, aires_api_key
 from handlers import routers
 from services import middleware
+from services.Intrum.Client import ClientIntrum
 from services.scheduler import Schedule
 
 logger = logging.getLogger(__name__)
@@ -24,6 +26,8 @@ async def set_commands():
 
 
 async def main() -> None:
+    # s = await ClientIntrum(aires_api_key).change_user()
+    # logger.info(json.dumps(s, indent=4))
     scheduler_process = Process(target=Schedule().run)
     scheduler_process.start()
     await set_commands()

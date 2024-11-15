@@ -49,15 +49,14 @@ class Schedule:
                 if user_id == "952":
                     if value_field == "Лиды Отключены":
                         if data[user_id]:
-                            status = self.change_worker(user_id=str(user_id), value=value_field)
-                            logger.info(status)
+                            status = self.intrum.change_worker(user_id=str(user_id), value=value_field)
                             if status:
                                 send = True
                                 send_message += f"{user_id}, "
                                 logger.info(f"Пользователь изменен(Лиды Отключены): {user_id}")
                         else:
                             if not data[user_id]:
-                                status = self.change_worker(user_id=str(user_id), value=value_field)
+                                status = await self.intrum.change_worker(user_id=str(user_id), value=value_field)
                                 if status:
                                     send = True
                                     send_message += f"{user_id}\n"

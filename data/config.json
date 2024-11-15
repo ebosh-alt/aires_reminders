@@ -1,5 +1,5 @@
 {
-    "enabled": true,
+    "enabled": false,
     "start_time": "09:29",
     "delay": 10,
     "emails": [

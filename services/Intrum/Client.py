@@ -56,30 +56,16 @@ class ClientIntrum(BaseApi):
     async def get_users_expired(self):
         return await self.get_users(True)
 
-    async def change_user(self, user_id: int = "1125"):
-        # получение сотрудника
-        response = await self._post(ApiPoint.worker_filter, {"params[id]": user_id})
-        if response.get("status") != "success":
-            return 404
-        user = response["data"].get(user_id)
-        if user:
-            logger.info(json.dumps(user, indent=4, ensure_ascii=False))
-            fields = user["fields"]
-            lead_status = fields.get("3657", {}).get("value")
-            if lead_status:
-                user["fields"]["3657"]["value"] = "Лиды Отключены"
-                logger.info(json.dumps(user, indent=4, ensure_ascii=False))
-                # попытка изменить сотрудника
-                params = {
-                    "params": {
-                        "id": user.get("id"),
-                        "fields": [{"id": "3657", "value": "Лиды Отключены"}]
-                    }}
-                response = await self._post(ApiPoint.update_user, params)
-                logger.info(response)
-                if response.get("status") != "success":
-                    return True
-                return False
+    async def change_worker(self, user_id: str = "1125", value: str = "Лиды Отключены"):
+        params = {
+            "params[0][id]": user_id,
+            "params[0][fields][0][id]": "3657",
+            "params[0][fields][0][value]": value,
+        }
+        response = await self._post(ApiPoint.update_user, params)
+        if response.get("status") == "success":
+            return True
+        return False
 
     async def get_deal(self, deal_id):
         params = {
@@ -95,7 +81,6 @@ class ClientIntrum(BaseApi):
             # logger.info(json.dumps(json_deal, indent=4, ensure_ascii=False))
             logger.info(len(response["data"]["list"]))
             return Deals.from_json(json_deal)
-        # return deals
 
     async def get_deals(self, users: list[User]) -> list[Deals] | int:
         user_ids = [user.id for user in users]
